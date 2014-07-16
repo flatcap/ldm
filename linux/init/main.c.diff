@@ -1,0 +1,23 @@
+--- main.c.2.4.17	Sat Dec 22 02:08:59 2001
++++ main.c	Sun Dec 23 19:00:46 2001
+@@ -65,6 +65,10 @@
+ extern int irda_device_init(void);
+ #endif
+ 
++#ifdef CONFIG_LDM_MD
++extern void ldm_md_flush(void);
++#endif
++
+ #ifdef CONFIG_X86_LOCAL_APIC
+ #include <asm/smp.h>
+ #endif
+@@ -764,6 +768,9 @@
+ 	else
+ #endif
+ 	rd_load();
++#endif
++#ifdef CONFIG_LDM_MD
++	ldm_md_flush();
+ #endif
+ 
+ 	/* Mount the root filesystem.. */

@@ -1,0 +1,105 @@
+--- md.c.2.4.17	Sat Dec 22 02:08:46 2001
++++ md.c	Sun Dec 23 18:58:22 2001
+@@ -12,6 +12,7 @@
+    - kmod support by: Cyrus Durgin
+    - RAID0 bugfixes: Mark Anthony Lisher <markal@iname.com>
+    - Devfs support by Richard Gooch <rgooch@atnf.csiro.au>
++   - Hook for device adding: Jakob Kemi <jakob.kemi@telia.com>
+ 
+    - lots of fixes and improvements to the RAID1/RAID5 and generic
+      RAID code (such as request based resynchronization):
+@@ -3700,7 +3701,7 @@
+  * Searches all registered partitions for autorun RAID arrays
+  * at boot time.
+  */
+-static int detected_devices[128];
++static kdev_t detected_devices[128];
+ static int dev_cnt;
+ 
+ void md_autodetect_dev(kdev_t dev)
+@@ -3938,6 +3939,85 @@
+ 			printk(KERN_WARNING "md: starting md%d failed\n", minor);
+ 		}
+ 	}
++}
++
++/*
++ * Function for adding a md volume from within the kernel
++ * Similiar to kernel options md= with non-persistent sb.
++ * Mostly ripped from md_setup_drive().
++ * @chunk_size is in units of 4k
++ * @parts is number of entries in @devs
++ */
++int md_hook_add(int minor, int level, int chunk_size, int parts, kdev_t* devs)
++{
++	mdu_array_info_t ainfo;
++	mdu_disk_info_t dinfo;
++	mddev_t* mddev;
++	kdev_t dev;
++	int i, err;
++	
++	if (minor >= MAX_MD_DEVS) {
++		printk(KERN_WARNING "md: hook_add(%d) minor too high.\n", minor);
++		return 0;
++	}
++	
++	if (level != -1 && level != 0) {
++		printk(KERN_WARNING "md: hook_add(%d) invalid level.\n", minor);
++		return 0;
++	}
++	
++	dev = MKDEV(MD_MAJOR, minor);
++	
++	if ( kdev_to_mddev(dev) ) {
++		printk(KERN_WARNING "md: hook_add(%d) already exists!\n", minor);
++		return 0;
++	}
++
++	mddev = alloc_mddev(dev);
++	if (!mddev) {
++		printk(KERN_ERR "md: hook_add(%d) kmalloc failed\n", minor);
++		return 0;
++	}
++	
++	/* non-persistent */
++	ainfo.level = level;
++	ainfo.size = 0;
++	ainfo.nr_disks =parts;
++	ainfo.raid_disks =parts;
++	
++	ainfo.md_minor = minor;
++	ainfo.not_persistent = 1;
++
++	ainfo.state = (1 << MD_SB_CLEAN);
++	ainfo.active_disks = parts;
++	ainfo.working_disks = parts;
++	
++	ainfo.failed_disks = 0;
++	ainfo.spare_disks = 0;
++	ainfo.layout = 0;
++	ainfo.chunk_size = chunk_size<<12;
++	err = set_array_info(mddev, &ainfo);
++	
++	for (i = 0; (!err) && (i < parts); i++) {
++		dinfo.number = i;
++		dinfo.raid_disk = i;
++		dinfo.state = (1<<MD_DISK_ACTIVE)|(1<<MD_DISK_SYNC);
++		dinfo.major = MAJOR( devs[i] );
++		dinfo.minor = MINOR( devs[i] );
++		err = add_new_disk (mddev, &dinfo);
++	}
++	
++	if (!err)
++		err = do_md_run(mddev);
++		
++	if (err) {
++		mddev->sb_dirty = 0;
++		do_md_stop(mddev, 0);
++		printk(KERN_WARNING "md hook_add(%d) start failure\n", minor);
++		return 0;
++	}
++
++	return 1;
+ }
+ 
+ static int md__init raid_setup(char *str)

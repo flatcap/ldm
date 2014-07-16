@@ -1,0 +1,42 @@
+Windows' Logical Disk Manager (Dynamic Disk) support
+CONFIG_LDM_PARTITION
+  Say Y here if you would like to use hard disks under Linux which
+  were partitioned using Windows 2000's or XP's Logical Disk Manager.
+  They are also known as "Dynamic Disks".
+
+  Windows 2000 introduced the concept of Dynamic Disks to get around
+  the limitations of the PC's partitioning scheme.  The Logical Disk
+  Manager allows the user to repartion a disk and create spanned,
+  mirrored, striped or RAID volumes, all without the need for
+  rebooting.
+
+  Normal partitions are now called Basic Disks under Windows 2000 and XP.
+
+  Technical documentation to accompany this driver is available from:
+  <http://linux-ntfs.sf.net/ldm>
+
+  If unsure, say N.
+
+Windows' LDM extra logging
+CONFIG_LDM_DEBUG
+  Say Y here if you would like LDM to log verbosely.  This could be
+  helpful if the driver doesn't work as expected and you'd like to
+  report a bug.
+
+  If unsure, say N.
+
+Windows' LDM Multiple Devices (MD) support
+CONFIG_LDM_MD
+  Say Y here if you want support for stripe-sets etc.
+  (You also want to say yes to RAID0 support in MD section)
+
+Windows' LDM minor number of first md-device
+CONFIG_LDM_MD_MINOR
+  Set to minor number of first md device added from LDM data.
+  Setting CONFIG_LDM_MD_MINOR to 15 would create
+  /dev/md15, /dev/md16 ... /dev/mdN for an example.
+  
+  (If you change this make sure not to interfere with already defined
+  entries from MD superblocks etc.)
+
+# LocalWords:  LDM

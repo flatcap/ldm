@@ -1,0 +1,46 @@
+
+Logical Disk Manager (Dynamic Disk) Tool and Driver.
+
+There are two packages included here.  A userland tool to dump the contents of
+a Window 2000 LDM Disk.  Also there's a Linux Filesystem driver.  You need to
+know what you're doing to use this.
+
+The packages are part of the Linux-NTFS Project which is hosted on SourceForge:
+
+  http://linux-ntfs.sourceforge.net
+
+I've included a prebuilt copy of the tool in the .tar If you want to build it
+yourself you need the kernel header files, then "make" should do the trick.
+If it doesn't build without errors, then you'll need to know your way around
+the kernel to fix things.
+
+LDMInfo can be used in three ways:
+
+	ldminfo /dev/hdb		Standard partition list
+
+	ldminfo --dump /dev/hdb		Detailed dump of LDM Database
+
+	ldminfo --copy /dev/hdb		Write the LDM Database to a file
+
+In addition, you can add the --debug flag.  This will show you what's
+going on inside the code.  Not at all interesting, but vital to help
+us debug the application.
+
+The standard partition list looks something like this:
+
+ Device | Offset Bytes    Sectors    MiB | Size   Bytes    Sectors    MiB
+ -------+--------------------------------+-------------------------------
+ hdb    |            0          0      0 |     21159936      41328     20
+ hdb1   |        32256         63      0 |      5242880      10240      5
+ hdb2   |      5275136      10303      5 |      5242880      10240      5
+ hdb3   |     10518016      20543     10 |      3145728       6144      3
+ hdb4   |     13663744      26687     13 |      6291456      12288      6
+
+
+Any bugs / problems / comments, please email me.
+
+Cheers,
+    FlatCap (Richard).
+    ldm@flatcap.org
+    http://linux-ntfs.sourceforge.net
+

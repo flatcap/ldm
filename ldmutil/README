@@ -1,0 +1,54 @@
+
+    ldmutil -- For restore/backup of LDM db and changing of volume types.
+           Copyright (C) 2001 Jakob Kemi <jakob.kemi@telia.com>
+
+
+*************
+* Operation *
+*************
+
+Not written yet.
+
+
+********
+* misc *
+********
+
+* ldmutil doesn't deal well with vblk entries with > 1 records.
+  The only types affected by this is VOLUME, COMPONENT and PARTITION.
+  I haven't yet seen any such vblk with > 1 records.
+	
+* ldmutil doesn't check for bad parent_id and object_id in vblks.
+  I'm not sure if this is necessary, any db that broken will
+  probably not work in Win2k/XP anyway.
+	
+* ldmutil assumes many things, for eg. where database is located (only
+  affects the copy database operation). VBLK size (ldmutil will
+  spit out a message and quit if size isn't 128 bytes)
+
+* Support for Win2k/XP should be trivial, modify types.h, endian.h and
+  create a new diskio.cpp.
+
+
+***************
+* Sourcefiles *
+***************
+
+main.cpp	--	main program file, parse command line etc
+types.h		--	Definition of data types. (add compiler specific
+			for platforms which lacks linux/types.h.)
+endian.h	--	functions handling endianess (add generic
+			for platforms where asm/byteorder.h doesn't exists.)
+error.h		--	Object containing error message for throwing as an
+			exception.
+diskio.cpp/h	--	I/O-class for sector level file/device I/O.
+			(add an implementation for Win2k/XP.)
+ldm_db.cpp/h	--	main ldm class, the complete database and methods
+ldm_dump.cpp/h	--	functions for dumping info on objects in ldm db
+ldm_parse.cpp/h	--	functions for reading and writing various ldm structs
+			on disk
+typetable.cpp/h	--	table of strings associated with partition type codes
+			(incomplete)
+
+Have fun!!
+	/ Jakob

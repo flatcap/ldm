@@ -1,0 +1,154 @@
+2002-08-09 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.8 released
+	* Updated with Al Viro's partitions cleanup
+	* More tidyups
+	* Created patches for current kernels
+
+2002-06-23 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.7 released
+	* Created patches for current kernels
+
+2002-06-21 Richard Russon <ldm@flatcap.org>
+
+	* Reverted DEBUG_ON to BUG_ON
+	* Reverted list_t's following an lkml thread
+	* Simplified logging output
+	* Updated kernel config options
+	* Only create data partitions, i.e. ignore the database
+	* Created ldm.txt a brief guide to LDM
+	* Added some memory profiling code
+
+2002-04-25 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.6 released
+
+2002-04-18 Richard Russon <ldm@flatcap.org>
+
+	* Reworked the fragment handling code.  Happy now.
+	* Lots of tidying up.
+	* combined out_of_range and relative.
+
+2002-04-12 Richard Russon <ldm@flatcap.org>
+
+	* Lots of renaming.  The VBLK types have become a name-version hybrid.
+	* More range checking.  The disk size is used to verify the privhead,
+	  the privhead for the tocblock and the tocblocks for the vmdb.
+	* Added a version number to ldminfo.
+
+2002-03-09 Richard Russon <ldm@flatcap.org>
+
+	* I've finally managed to decipher all the flags and I now
+	  understand the VBLK numbering.
+	* Added checks for the lengths of VBLKs.
+	* Removed some redundant checks of VBLKs.
+
+2002-02-24 Jakob Kemi <jakob.kemi@telia.com>
+
+	* Total redesign of multipart VBLK record handling.
+	  Should be faster and cleaner now. It still needs some polishing.
+	* Switched to list_for_each_safe() when using kfree().
+	* Probably introduced some new bugs ;)
+
+2002-02-23 Richard Russon <ldm@flatcap.org>
+
+	* Replace hex conversion routines with a sscanf
+	* Remove lots of assumptions from ldminfo's copy option
+
+2002-02-09  Jakob Kemi <jakob.kemi@telia.com>
+
+	* Code cleanups and commenting
+	* Major was rewrite of:
+	  ldm_validate_partition_table()
+	  ldm_validate_privheads()
+	  ldm_validate_tocblocks()
+	* ldm_create_db_partition() is now obsolete and removed.
+	* Converted tab length in ldm_md.c from 4 to 8
+
+2001-02-08  Richard Russon <ldm@flatcap.org>
+
+	* Build fixes.  It should now compile cleanly against late 2.4 and 2.5,
+	  without resorting to black arts.
+	* Tidied code, BUG_ON, BOOL, __attribute__ printf
+
+2001-12-31  Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.5 released
+	* ldminfo works properly again
+
+2001-12-19  Richard Russon <ldm@flatcap.org>
+
+	* Made ldminfo compile again
+	* Converted all GUIDs to binary
+	* Minor bugfix for extended VBLKs
+
+2001-12-14 Jakob Kemi <jakob.kemi@telia.com>
+
+	* LDM MD volumes now check for valid GUID.
+	* Added ldmutil for setting volume types (good for persistent superblock md)
+	  I had to revert to rewriting old ldmutil, in order to KISS.
+	* Updated changelog for the last month ;)
+
+2001-11-24 Jakob Kemi <jakob.kemi@telia.com>
+
+	* Further rewrite
+	  All use of buffer_head is now gone.
+	  Moved pages into vblk.ext, separate pagelist now unnecessary.
+	  Merged ldm_get_vblks() and ldm_get_buffers() into one simpler function.
+	  struct vblkdb is now known as ldb.
+	  Again smaller source and memory footprint.
+	* Moved adding of native LDM MD volumes to init/main.c where it belongs.
+	* More tidying.
+
+2001-11-20 Jakob Kemi <jakob.kemi@telia.com>
+
+	* Big rewrite
+	  Added vblk.ext structure for multiple vblk-records.
+	  Vblk types now stored in different lists (in vblkdb struct).
+	  Separate list for partition-sorting no longer necessary.
+	  Now supporting vblk records of arbitrary size.
+	  Smaller source and memory footprint.
+	* Lots of tidying.
+
+2001-11-13 Jakob Kemi <jakob.kemi@telia.com>
+
+	* Added support for native LDM stripe(RAID-0) volumes. (ldm_md.c)
+	  (config option CONFIG_LDM_MD)
+
+2001-10-09 Jakob Kemi <jakob.kemi@telia.com>
+
+	* Misc. fixes, support for partition types
+	* Added md autodetect
+
+2001-08-22 Richard Russon <ldm@flatcap.org>
+
+	* Huge rewrite -- database now cached
+	* Lots of tidying up
+	* Comment blocks everywhere
+
+2000-07-26 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.4 released
+	* More bulletproofing
+	* Merged prototype ldm and drive into ldminfo
+
+2000-07-03 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.3 released
+	* Tidied up the code (it's now as legible as I can make it)
+	* Lots of bulletproofing
+	* Debug logging is now a config option
+
+2000-06-26 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.2	released
+	* Got rid of the configure scripts (complete overkill)
+	* Reduced Configure.help to just our text (much smaller)
+	* Added LOTS of logging
+
+2000-06-22 Richard Russon <ldm@flatcap.org>
+
+	* Version 0.0.1	released
+	* Need more test data
+

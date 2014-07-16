@@ -1,0 +1,188 @@
+--- src/ldm.c	Mon Aug  5 15:34:38 2002
++++ kernel/ldm.c	Mon Aug  5 16:50:20 2002
+@@ -29,19 +29,6 @@
+ #include "check.h"
+ #include "msdos.h"
+ 
+-#ifdef CONFIG_LDM_EXPORT_SYMBOLS
+-#   define static
+-#endif
+-
+-#ifdef CONFIG_BLK_DEV_MD
+-extern void md_autodetect_dev (kdev_t dev);
+-#endif
+-
+-#ifdef CONFIG_LDM_MD
+-void ldm_md_addpart(const u8 *dg_guid, u32 objid, u8 comptype,
+-		    u8 n, u8 parts, u8 chunk_s, kdev_t dev);
+-#endif
+-
+ typedef enum {
+ 	FALSE = 0,
+ 	TRUE  = 1
+@@ -594,32 +581,6 @@
+ }
+ 
+ /**
+- * ldm_find_vblk - Search a linked list of VBLKs for a given object id
+- * @lh_vl:  Head of a linked list of VBLKs
+- * @id:     Object id to find
+- *
+- * Return:  Pointer, A matching vblk was found
+- *          NULL,    No match, or an error
+- */
+-#ifdef CONFIG_BLK_DEV_MD
+-static struct vblk * ldm_find_vblk (const struct list_head *lh_vl, u64 id)
+-{
+-	struct list_head *item;
+-
+-	BUG_ON (!lh_vl);
+-
+-	list_for_each (item, lh_vl) {
+-		struct vblk *vb = list_entry (item, struct vblk, list);
+-		if (vb->obj_id == id)
+-			return vb;
+-	}
+-
+-	ldm_debug ("Search for vblk #%llu failed!", (unsigned long long) id);
+-	return NULL;
+-}
+-#endif
+-
+-/**
+  * ldm_get_disk_objid - Search a linked list of vblk's for a given Disk Id
+  * @ldb:  Cache of the database structures
+  *
+@@ -662,14 +623,8 @@
+  * Return:  TRUE   Partition created
+  *          FALSE  Error, probably a range checking problem
+  */
+-#ifdef CONFIG_BLK_DEV_MD
+-static BOOL ldm_create_data_partitions (struct parsed_partitions *pp,
+-					const struct ldmdb *ldb,
+-					struct block_device *bdev)
+-#else
+ static BOOL ldm_create_data_partitions (struct parsed_partitions *pp,
+ 					const struct ldmdb *ldb)
+-#endif
+ {
+ 	struct list_head *item;
+ 	struct vblk *vb;
+@@ -689,10 +644,6 @@
+ 
+ 	/* Create the data partitions */
+ 	list_for_each (item, &ldb->v_part) {
+-#ifdef CONFIG_BLK_DEV_MD	/* CONFIG_LDM_MD implies CONFIG_BLK_DEV_MD */
+-		struct vblk *v, *c;
+-		const kdev_t dev = bdev->bd_inode->i_dev;
+-#endif
+ 		vb = list_entry (item, struct vblk, list);
+ 		part = &vb->vblk.part;
+ 
+@@ -701,33 +652,6 @@
+ 
+ 		put_partition (pp, part_num, ldb->ph.logical_disk_start +
+ 				part->start, part->size);
+-#ifdef CONFIG_BLK_DEV_MD
+-		/* Try to get parent component */
+-		c = ldm_find_vblk (&ldb->v_comp, part->parent_id);
+-		if (!c) {
+-			ldm_error ("Can't find VBLK's parent (component).");
+-			continue;
+-		}
+-
+-		/* Try to get parent volume */
+-		v = ldm_find_vblk (&ldb->v_volu, c->vblk.comp.parent_id);
+-		if (v == NULL) {
+-			ldm_error ("Can't find VBLK's parent (volume).");
+-			continue;
+-		}
+-
+-		/* Notify md of RAID autodetect part types */
+-		if (v->vblk.volu.partition_type == LINUX_RAID_PARTITION) {
+-			md_autodetect_dev (dev);
+-			continue;
+-		}
+-#ifdef CONFIG_LDM_MD
+-		/* Register to LDM_MD */
+-		ldm_md_addpart (v->vblk.volu.guid, c->obj_id,
+-		    c->vblk.comp.type, part->partnum, c->vblk.comp.children,
+-		    c->vblk.comp.chunksize / (4096 / 512), dev);
+-#endif
+-#endif
+ 		part_num++;
+ 	}
+ 
+@@ -1490,15 +1414,9 @@
+  *         -1 An error occurred before enough information had been read
+  *            Or @bdev is a dynamic disk, but it may be corrupted
+  */
+-#ifdef CONFIG_LDM_EXPORT_SYMBOLS
+-int ldm_partition (struct parsed_partitions *pp, struct block_device *bdev, struct ldmdb *ldb)
+-#else
+ int ldm_partition (struct parsed_partitions *pp, struct block_device *bdev)
+-#endif
+ {
+-#ifndef CONFIG_LDM_EXPORT_SYMBOLS
+ 	struct ldmdb  *ldb;
+-#endif
+ 	unsigned long base;
+ 	int result = -1;
+ 
+@@ -1508,13 +1426,11 @@
+ 	if (!ldm_validate_partition_table (bdev))
+ 		return 0;
+ 
+-#ifndef CONFIG_LDM_EXPORT_SYMBOLS
+ 	ldb = kmalloc (sizeof (*ldb), GFP_KERNEL);
+ 	if (!ldb) {
+ 		ldm_crit ("Out of memory.");
+ 		goto out;
+ 	}
+-#endif
+ 
+ 	/* Parse and check privheads. */
+ 	if (!ldm_validate_privheads (bdev, &ldb->ph))
+@@ -1529,13 +1445,11 @@
+ 	    	goto out;		/* Already logged */
+ 
+ 	/* Initialize vblk lists in ldmdb struct */
+-#ifndef CONFIG_LDM_EXPORT_SYMBOLS
+ 	INIT_LIST_HEAD (&ldb->v_dgrp);
+ 	INIT_LIST_HEAD (&ldb->v_disk);
+ 	INIT_LIST_HEAD (&ldb->v_volu);
+ 	INIT_LIST_HEAD (&ldb->v_comp);
+ 	INIT_LIST_HEAD (&ldb->v_part);
+-#endif
+ 
+ 	if (!ldm_get_vblks (bdev, base, ldb)) {
+ 		ldm_crit ("Failed to read the VBLKs from the database.");
+@@ -1543,28 +1457,20 @@
+ 	}
+ 
+ 	/* Finally, create the data partition devices. */
+-#ifdef CONFIG_BLK_DEV_MD
+-	if (ldm_create_data_partitions (pp, ldb, bdev)) {
+-#else
+ 	if (ldm_create_data_partitions (pp, ldb)) {
+-#endif
+ 		ldm_debug ("Parsed LDM database successfully.");
+ 		result = 1;
+ 	}
+ 	/* else Already logged */
+ 
+ cleanup:
+-#ifndef CONFIG_LDM_EXPORT_SYMBOLS
+ 	ldm_free_vblks (&ldb->v_dgrp);
+ 	ldm_free_vblks (&ldb->v_disk);
+ 	ldm_free_vblks (&ldb->v_volu);
+ 	ldm_free_vblks (&ldb->v_comp);
+ 	ldm_free_vblks (&ldb->v_part);
+-#endif
+ out:
+-#ifndef CONFIG_LDM_EXPORT_SYMBOLS
+ 	kfree (ldb);
+-#endif
+ 	return result;
+ }
+ 

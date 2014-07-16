@@ -1,0 +1,4 @@
+   dep_bool '  Windows Logical Disk Manager (Dynamic Disk) support' CONFIG_LDM_PARTITION
+   if [ "$CONFIG_LDM_PARTITION" = "y" ]; then
+      bool '    Windows LDM extra logging' CONFIG_LDM_DEBUG
+   fi

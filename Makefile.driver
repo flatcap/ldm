@@ -1,0 +1,32 @@
+# Copyright (C) 2001 Richard Russon
+
+SRCDIR	= linux/fs/partitions
+
+SRC	= $(SRCDIR)/ldm.c
+HDR	= $(SRC:.c=.h)
+OBJ	= $(SRC:.c=.o)
+
+OUT	= $(SRCDIR)/partitions.o
+
+CFLAGS += -include $(KERNEL)/include/linux/config.h
+CFLAGS += -include test/extra.h
+
+CFLAGS += -I.
+CFLAGS += -I$(SRCDIR)
+CFLAGS += -I$(KERNEL)/include
+CFLAGS += -I$(KERNEL)/fs/partitions
+
+all:	$(SRC) $(HDR) $(OUT)
+
+$(OUT): $(OBJ)
+	$(RM) $(OUT)
+	$(LD) $(LFLAGS) -o $(OUT) $(OBJ)
+
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	$(RM) $(OUT) $(OBJ)
+
+distclean: clean
+

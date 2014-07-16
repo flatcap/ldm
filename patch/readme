@@ -1,0 +1,9 @@
+The new driver has now been accepted into the 2.5 Linux kernel (2.5.29).
+
+If you want to add the latest LDM driver to a 2.4 kernel you can use
+one of these patches:
+
+Marcelo  patch-2.4.19-ldm
+Alan     patch-2.4.20-pre1-ac1-ldm
+
+
