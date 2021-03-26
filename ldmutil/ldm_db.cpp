@@ -25,6 +25,8 @@
 #include <iomanip>
 #include <list>
 #include <map>
+#include <cstring>
+#include <cstdio>
 
 #include "types.h"
 #include "error.h"
@@ -49,7 +51,7 @@ void ldmdb_c::Read(diskio& dev)
 	privhead_t ph;
 	tocblock_t tb;
 	vmdb_t vm;
-	int i;
+	int i, nr_tbs;
 
 	if (dev.GetSectorSize() != LDM_SECT_SIZE)
 		throw LDM_MKERROR("Illegal sector size.\n");
@@ -67,13 +69,25 @@ void ldmdb_c::Read(diskio& dev)
 	if (!raw_to_privhead(sect, &ph))
 		throw LDM_MKERROR("Unable to parse privhead 3.\n");
 
-	if (ph.v_major != 2 || ph.v_minor != 11)
+	if (ph.v_major != 2 || ph.v_minor < 11 || ph.v_minor > 12 )
 		throw LDM_MKERROR("Bad privhead version.\n");
 
-// read tocblock 1
-	dev.Read(sect, 1, ph.db_start + _ldm_off_tb[0]);
-	if (!raw_to_tocblock(sect, &tb))
-		throw LDM_MKERROR("Unable to parse tocblock 1.\n");
+// read tocblocks
+	for (nr_tbs = i = 0; i < 4; i++) {
+		dev.Read(sect, 1, ph.db_start + _ldm_off_tb[i]);
+		if (!raw_to_tocblock(sect, &tb)) {
+//			printf(" error in tockblock %d at sector = %llx\n", i, ph.db_start + _ldm_off_tb[i]  );
+//			throw LDM_MKERROR("Unable to parse tocblock 1.\n");
+		}
+		else {
+//			printf(" found tockblock %d at sector = %llx\n", i, ph.db_start + _ldm_off_tb[i]  );
+			nr_tbs++;
+			break;  // should check all
+		}
+	}
+	if (nr_tbs == 0)
+		throw LDM_MKERROR("Unable to find a valid tocblock\n");
+		
 
 // read vmdb
 	dev.Read(sect, 1, ph.db_start + tb.bitmap1_start);
